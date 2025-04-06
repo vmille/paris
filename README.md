@@ -34,7 +34,7 @@ Date      | Présentations  | Meetup
 2017-05-18|[#17](events/2017-05-18_n17)|[No C++17 (Not only)](https://www.meetup.com/User-Group-Cpp-Francophone/events/239663039)
 2017-06-13|[#18](events/2017-06-13_n18)|[Majeur et vacciné](https://www.meetup.com/User-Group-Cpp-Francophone/events/240136200)
 2017-09-14|[#19](events/2017-09-14_n19)|[Before we pack for Bellevue](https://www.meetup.com/User-Group-Cpp-Francophone/events/243111702)
-
+2025-03-27|[#58](events/2025-03-27_n58)|[Do GPUs have hips ?](https://www.meetup.com/fr-FR/user-group-cpp-francophone/events/306556763)
 
 Objectif documentaire - Documentary goal
 ----------------------------------------
