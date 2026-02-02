@@ -1,0 +1,627 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>C++ 2025 : le risque de l'immobilisme</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Sometype+Mono:wght@400;700&family=Archivo:wght@300;400;600;800&display=swap" rel="stylesheet">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        :root {
+            --bg-primary: #1a1a1a;
+            --bg-secondary: #2a2a2a;
+            --accent-blue: #4a9eff;
+            --accent-orange: #ff8c42;
+            --text-primary: #e8e8e8;
+            --text-secondary: #b0b0b0;
+        }
+
+        body {
+            font-family: 'Archivo', sans-serif;
+            background: var(--bg-primary);
+            color: var(--text-primary);
+            overflow: hidden;
+        }
+
+        .logo-container {
+            position: fixed;
+            top: 2rem;
+            right: 2rem;
+            z-index: 1000;
+        }
+
+        .logo-main {
+            width: 120px;
+            height: auto;
+        }
+
+        .logo-it {
+            width: 80px;
+            height: auto;
+        }
+
+        .slide {
+            position: absolute;
+            width: 100vw;
+            height: 100vh;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            padding: 4rem;
+            opacity: 0;
+            transition: opacity 0.4s ease;
+            pointer-events: none;
+        }
+
+        .slide.active {
+            opacity: 1;
+            pointer-events: auto;
+        }
+
+        h1 {
+            font-family: 'Sometype Mono', monospace;
+            font-size: clamp(2.5rem, 5vw, 4.5rem);
+            font-weight: 700;
+            line-height: 1.2;
+            text-align: center;
+            margin-bottom: 1.5rem;
+            color: var(--accent-blue);
+        }
+
+        h2 {
+            font-family: 'Sometype Mono', monospace;
+            font-size: clamp(1.8rem, 3.5vw, 3rem);
+            font-weight: 600;
+            margin-bottom: 2.5rem;
+            color: var(--accent-blue);
+            text-align: center;
+        }
+
+        h3 {
+            font-size: clamp(1.2rem, 2vw, 1.6rem);
+            font-weight: 600;
+            margin-bottom: 1rem;
+            color: var(--accent-orange);
+        }
+
+        p, li {
+            font-size: clamp(1rem, 1.4vw, 1.2rem);
+            line-height: 1.7;
+            color: var(--text-secondary);
+        }
+
+        .subtitle {
+            font-size: clamp(1.1rem, 1.8vw, 1.5rem);
+            color: var(--text-secondary);
+            text-align: center;
+            margin-bottom: 2rem;
+            font-weight: 300;
+        }
+
+        .content {
+            max-width: 1100px;
+            width: 100%;
+        }
+
+        .code-example {
+            background: var(--bg-secondary);
+            border-left: 3px solid var(--accent-blue);
+            padding: 1.2rem;
+            margin: 1.5rem 0;
+            border-radius: 4px;
+            font-family: 'Sometype Mono', monospace;
+            font-size: 0.95rem;
+            color: #a8b5d1;
+        }
+
+        .code-example .keyword {
+            color: var(--accent-orange);
+        }
+
+        .code-example .type {
+            color: var(--accent-blue);
+        }
+
+        ul {
+            list-style: none;
+            margin: 1.5rem 0;
+        }
+
+        ul li {
+            padding: 0.8rem 0;
+            padding-left: 1.5rem;
+            position: relative;
+        }
+
+        ul li::before {
+            content: "•";
+            color: var(--accent-blue);
+            font-size: 1.5rem;
+            position: absolute;
+            left: 0;
+            top: 0.5rem;
+        }
+
+        .list-item {
+            background: var(--bg-secondary);
+            padding: 1.2rem;
+            margin-bottom: 1rem;
+            border-radius: 4px;
+            border-left: 3px solid var(--accent-blue);
+        }
+
+        .comparison {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 2rem;
+            margin: 2rem 0;
+        }
+
+        .progress-indicator {
+            position: fixed;
+            bottom: 2rem;
+            left: 50%;
+            transform: translateX(-50%);
+            display: flex;
+            gap: 0.5rem;
+            z-index: 1000;
+        }
+
+        .progress-dot {
+            width: 10px;
+            height: 10px;
+            border-radius: 50%;
+            background: #444;
+            transition: background 0.3s ease;
+            cursor: pointer;
+        }
+
+        .progress-dot.active {
+            background: var(--accent-blue);
+        }
+
+        .progress-dot:hover {
+            background: var(--accent-orange);
+        }
+
+        .slide-counter {
+            position: fixed;
+            bottom: 2rem;
+            right: 2rem;
+            font-family: 'Sometype Mono', monospace;
+            font-size: 0.9rem;
+            color: #666;
+            z-index: 1000;
+        }
+
+        .nav-hint {
+            position: fixed;
+            bottom: 2rem;
+            left: 50%;
+            transform: translateX(-50%);
+            font-family: 'Sometype Mono', monospace;
+            font-size: 0.75rem;
+            color: #666;
+            display: none;
+        }
+
+        .slide[data-slide="0"] .nav-hint {
+            display: block;
+        }
+
+        .highlight {
+            color: var(--accent-orange);
+            font-weight: 600;
+        }
+
+        .cpp-version {
+            font-family: 'Sometype Mono', monospace;
+            background: var(--bg-secondary);
+            padding: 0.2rem 0.6rem;
+            border-radius: 3px;
+            color: var(--accent-blue);
+            font-size: 0.95em;
+        }
+
+        @media (max-width: 768px) {
+            .comparison {
+                grid-template-columns: 1fr;
+            }
+            
+            .slide {
+                padding: 2rem;
+            }
+        }
+
+        .slide[data-slide="1"] ul li {
+            font-size: clamp(1.5rem, 3.5vw, 2.5rem) !important;
+            line-height: 1.8 !important;
+        }
+
+        .slide[data-slide="1"] ul li::before {
+            font-size: 2.5rem !important;
+            top: 0.2rem !important;
+        }
+    </style>
+</head>
+<body>
+    <!-- Logo container -->
+    <div class="logo-container">
+        <img src="exaltIt_logo.png" alt="Exalt Logo" class="logo-main">
+    </div>
+
+    <!-- Slide 1: Title -->
+    <div class="slide active" data-slide="0">
+        <h1>C++ 2025<br>Le risque de l'immobilisme</h1>
+        <p class="subtitle">Formation continue et transmission des savoirs</p>
+        <div class="code-example" style="max-width: 600px;">
+            <span class="keyword">auto</span> <span class="type">future</span> = modernize_cpp();
+        </div>
+        <div class="nav-hint">Clic gauche : suivant | Clic droit : précédent</div>
+    </div>
+
+    <!-- Slide 2: Sommaire -->
+    <div class="slide" data-slide="1">
+        <div class="content">
+            <h2>Au programme</h2>
+            <ul style="max-width: 700px; margin: 3rem auto; font-size: clamp(2rem, 6vw, 4rem); line-height: 2;">
+                <li>État des lieux du marché</li>
+                <li>Code legacy omniprésent</li>
+                <li>Comparaison : C++ vs Rust</li>
+                <li>Le risque de l'inaction</li>
+            </ul>
+        </div>
+    </div>
+
+    <!-- Slide 3: État des lieux -->
+    <div class="slide" data-slide="2">
+        <div class="content">
+            <h2>État des lieux du marché</h2>
+            <div class="list-container">
+                <div class="list-item">
+                    <h3>Réalité terrain</h3>
+                    <p><strong>C++11-17</strong> : Modernisation progressive (smart pointers, auto, move semantics, lambdas) — <span class="highlight">Le plus utilisé</span><br>
+                    <strong>C++20-23</strong> : Changement de paradigme (modules, concepts, coroutines, ranges...)</p>
+                    <p style="margin-top: 0.5rem; color: var(--accent-orange); font-weight: 600;">→ La majorité reste bloquée sur la première ère</p>
+                </div>
+                <div class="list-item">
+                    <h3>Formation académique</h3>
+                    <p>Enseignement des bases sans différenciation Java/C++/C#<br>
+                    Focus sur polymorphisme et héritage classique</p>
+                </div>
+                <div class="list-item">
+                    <h3>Jeunes développeurs</h3>
+                    <p>Intégration facile mais <span class="highlight">perpétuation des pratiques obsolètes</span></p>
+                </div>
+                <div class="list-item">
+                    <h3>⚠️ L'IA aggrave le problème</h3>
+                    <p>Les assistants IA reproduisent les patterns du code majoritaire<br>
+                    → Perpétuation automatisée des mauvaises pratiques<br>
+                    → Renforcement du cercle vicieux</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Slide 4a: Code Examples - Part 1 -->
+    <div class="slide" data-slide="3">
+        <div class="content">
+            <h2>Code legacy omniprésent (1/2)</h2>
+            <div class="comparison">
+                <div class="comparison-side">
+                    <h3 style="color: var(--accent-orange);">❌ Pratiques obsolètes</h3>
+                    <div class="code-example" style="margin: 0;">
+                        <span style="color: #666;">// Pointeurs nus</span><br>
+                        <span class="keyword">int</span>* data = <span class="keyword">new int</span>[100];<br>
+                        <span style="color: #666;">// ... risque de fuite mémoire</span><br>
+                        <span class="keyword">delete</span>[] data;
+                    </div>
+                    <div class="code-example" style="margin-top: 1rem;">
+                        <span style="color: #666;">// Boucles manuelles</span><br>
+                        <span class="keyword">for</span>(<span class="keyword">int</span> i=0; i&lt;vec.size(); ++i) {<br>
+                        &nbsp;&nbsp;<span class="keyword">if</span>(vec[i] &gt; 10) result.push_back(vec[i]);<br>
+                        }
+                    </div>
+                    <div class="code-example" style="margin-top: 1rem;">
+                        <span style="color: #666;">// If/else infinis</span><br>
+                        <span class="keyword">if</span>(type == <span class="type">TYPE_A</span>) { handleA(); }<br>
+                        <span class="keyword">else if</span>(type == <span class="type">TYPE_B</span>) { handleB(); }<br>
+                        <span class="keyword">else if</span>(type == <span class="type">TYPE_C</span>) { handleC(); }<br>
+                        <span style="color: #666;">// ... 20 autres cas</span>
+                    </div>
+                </div>
+                <div class="comparison-side">
+                    <h3 style="color: var(--accent-blue);">✓ Approche moderne</h3>
+                    <div class="code-example" style="margin: 0;">
+                        <span style="color: #666;">// Smart pointers C++14</span><br>
+                        <span class="keyword">auto</span> data = <span class="type">std::make_unique</span>&lt;<span class="keyword">int</span>[]&gt;(100);<br>
+                        <span style="color: #666;">// Gestion automatique</span><br>
+                        <br>
+                    </div>
+                    <div class="code-example" style="margin-top: 1rem;">
+                        <span style="color: #666;">// Ranges C++20</span><br>
+                        <span class="keyword">auto</span> result = vec | views::filter([](<span class="keyword">int</span> x) {<br>
+                        &nbsp;&nbsp;<span class="keyword">return</span> x &gt; 10;<br>
+                        });
+                    </div>
+                    <div class="code-example" style="margin-top: 1rem;">
+                        <span style="color: #666;">// std::map + lambdas C++17</span><br>
+                        <span class="type">std::map</span>&lt;<span class="type">Type</span>, <span class="type">std::function</span>&gt; handlers {<br>
+                        &nbsp;&nbsp;{<span class="type">TYPE_A</span>, handleA},<br>
+                        &nbsp;&nbsp;{<span class="type">TYPE_B</span>, handleB}<br>
+                        };
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Slide 4b: Code Examples - Part 2 -->
+    <div class="slide" data-slide="4">
+        <div class="content">
+            <h2>Code legacy omniprésent (2/2)</h2>
+            <div class="comparison">
+                <div class="comparison-side">
+                    <h3 style="color: var(--accent-orange);">❌ Pratiques obsolètes</h3>
+                    <div class="code-example" style="margin: 0;">
+                        <span style="color: #666;">// Header (.h)</span><br>
+                        <span class="keyword">extern const int</span> MAX_BUFFER_SIZE;<br>
+                        <span style="color: #666;">// Puis dans un .cpp :</span><br>
+                        <span class="keyword">const int</span> MAX_BUFFER_SIZE = 1024;<br>
+                        <span style="color: #666;">// Risque d'oubli de définition</span>
+                    </div>
+                    <div class="code-example" style="margin-top: 1rem;">
+                        <span style="color: #666;">// Passage par const ref</span><br>
+                        <span class="keyword">void</span> process(<span class="keyword">const std::string</span>& s) {<br>
+                        &nbsp;&nbsp;<span class="keyword">if</span> (s.size() &gt; 10) {<br>
+                        &nbsp;&nbsp;&nbsp;&nbsp;<span class="keyword">auto</span> substr = s.substr(0, 10);<br>
+                        &nbsp;&nbsp;&nbsp;&nbsp;<span style="color: #666;">// Copie inutile</span><br>
+                        &nbsp;&nbsp;}<br>
+                        }
+                    </div>
+                    <div class="code-example" style="margin-top: 1rem;">
+                        <span style="color: #666;">// Calcul à runtime</span><br>
+                        <span class="keyword">int</span> factorial(<span class="keyword">int</span> n) {<br>
+                        &nbsp;&nbsp;<span class="keyword">if</span> (n &lt;= 1) <span class="keyword">return</span> 1;<br>
+                        &nbsp;&nbsp;<span class="keyword">return</span> n * factorial(n-1);<br>
+                        }<br>
+                        <span style="color: #666;">// Évalué uniquement à runtime</span><br>
+                        <span style="color: #666;">// Coût en performance</span>
+                    </div>
+                </div>
+                <div class="comparison-side">
+                    <h3 style="color: var(--accent-blue);">✓ Approche moderne</h3>
+                    <div class="code-example" style="margin: 0;">
+                        <span style="color: #666;">// constexpr C++17</span><br>
+                        <span class="keyword">inline constexpr int</span> MAX_BUFFER_SIZE = 1024;<br>
+                        <span style="color: #666;">// Évalué à compile time</span><br>
+                        <span style="color: #666;">// Valeur fixe, sans risque</span><br><br>
+                    </div>
+                    <div class="code-example" style="margin-top: 1rem;">
+                        <span style="color: #666;">// Vue non-owning C++17</span><br>
+                        <span class="keyword">void</span> process(<span class="type">std::string_view</span> sv) {<br>
+                        &nbsp;&nbsp;<span class="keyword">if</span> (sv.size() &gt; 10) {<br>
+                        &nbsp;&nbsp;&nbsp;&nbsp;<span class="keyword">auto</span> subview = sv.substr(0, 10);<br>
+                        &nbsp;&nbsp;&nbsp;&nbsp;<span style="color: #666;">// Pas de copie</span><br>
+                        &nbsp;&nbsp;}<br>
+                        }
+                    </div>
+                    <div class="code-example" style="margin-top: 1rem;">
+                        <span style="color: #666;">// constexpr C++11/14</span><br>
+                        <span class="keyword">constexpr int</span> factorial(<span class="keyword">int</span> n) {<br>
+                        &nbsp;&nbsp;<span class="keyword">return</span> n &lt;= 1 ? 1 : n * factorial(n-1);<br>
+                        }<br>
+                        <span style="color: #666;">// Évalué à compile time si possible</span><br>
+                        <span style="color: #666;">// Zéro coût runtime pour constexpr args</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Slide 5: Comparison with Rust -->
+    <div class="slide" data-slide="5">
+        <div class="content">
+            <h2>Comparaison : C++ vs Rust</h2>
+            <div class="comparison">
+                <div class="comparison-side">
+                    <h3 style="color: var(--accent-blue);">C++ — Adoption graduelle</h3>
+                    <div class="list-container">
+                        <div class="list-item">
+                            <p><strong style="color: var(--accent-blue);">16,3M</strong> développeurs en 2025<br>
+                            <span style="font-size: 0.9rem; color: var(--text-secondary);">(9,4M en 2022 — +73&nbsp;% en 3 ans, estimations SlashData)</span></p>
+                        </div>
+                        <div class="list-item">
+                            <p>Adoption progressive de C++17/20/23&nbsp;: la plupart des projets restent sur des standards plus anciens.</p>
+                        </div>
+                        <div class="list-item">
+                            <p>D’après l’étude JetBrains “C++ Ecosystem in 2022”, une fraction notable des répondants indique ne pas planifier de migration vers les derniers standards (C++ 20/23) dans l’année à venir. Les valeurs exactes varient selon les standards. </p>
+                        </div>
+                    </div>
+                    <p style="margin-top: 1.5rem; color: var(--text-secondary); font-size: 0.9rem;">
+                        Source&nbsp;: Global Developer Population Trends 2025 (SlashData) + enquêtes d’écosystème (JetBrains, autres).
+                    </p>
+                </div>
+                <div class="comparison-side">
+                    <h3 style="color: var(--accent-orange);">Rust — Croissance explosive</h3>
+                    <div class="list-container">
+                        <div class="list-item">
+                            <p><strong style="color: var(--accent-blue);">≈2,3M</strong> développeurs en 2024–2025<br>
+                            <span style="font-size: 0.9rem; color: var(--text-secondary);">(langage bien plus jeune que C++)</span></p>
+                        </div>
+                        <div class="list-item">
+                            <p><strong style="color: var(--accent-blue);">+40&nbsp;%</strong> de croissance annuelle d’usage sur GitHub autour de 2024.</p>
+                        </div>
+                        <div class="list-item">
+                            <p><strong style="color: var(--accent-blue);">≈+68&nbsp;%</strong> de croissance de l’usage commercial entre 2021 et 2024.</p>
+                        </div>
+                        <div class="list-item">
+                            <p><strong style="color: var(--accent-blue);">45&nbsp;%</strong> des organisations des répondants déclarent un usage non trivial en production.</p>
+                        </div>
+                    </div>
+                    <p style="margin-top: 1.5rem; color: var(--text-secondary); font-size: 0.9rem;">
+                        Source&nbsp;: State of Rust Survey 2024, analyses d’adoption Rust (GitHub, études de marché).
+                    </p>
+                </div>
+            </div>
+            <div class="code-example" style="margin-top: 2rem; text-align: center; border-left-color: var(--accent-orange);">
+                <strong style="color: var(--text-primary);">Le legacy est amplifié par la taille de la base</strong><br>
+                <span style="color: var(--text-secondary);">16M+ développeurs C++ : plus la base est grande, plus l'inertie est forte</span>
+            </div>
+        </div>
+    </div>
+
+    <!-- Slide 6: Risques -->
+    <div class="slide" data-slide="6">
+        <div class="content">
+            <h2>Les risques de l'inaction</h2>
+            <div class="list-container">
+                <div class="list-item">
+                    <h3>🔄 Cercle vicieux</h3>
+                    <p>Pas de montée en compétences → Code legacy → Maintenance coûteuse → Pas de temps pour se former</p>
+                </div>
+                <div class="list-item">
+                    <h3>📉 Contraction du marché</h3>
+                    <p>Travail limité au maintien de l'existant<br>Perte de compétitivité face à Rust, Go...</p>
+                </div>
+                <div class="list-item">
+                    <h3>👥 Perte d'attractivité</h3>
+                    <p>Difficultés à recruter et fidéliser les talents<br>Les nouveaux développeurs recherchent des technologies modernes</p>
+                </div>
+                <div class="list-item">
+                    <h3>💸 Dette technique croissante</h3>
+                    <p>Écart grandissant avec les standards actuels<br>Coûts de migration exponentiels</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Slide 7: Solution -->
+    <div class="slide" data-slide="7">
+        <div class="content">
+            <h2>Une solution : formation continue</h2>
+            <div class="comparison">
+                <div class="comparison-side">
+                    <h3>Principe</h3>
+                    <div class="list-item">
+                        <p><strong>Transmission senior → junior</strong><br>
+                        Au sein des équipes<br>
+                        De manière structurée et régulière</p>
+                    </div>
+                </div>
+                <div class="comparison-side">
+                    <h3>Bénéfices</h3>
+                    <div class="list-item">
+                        <p>✓ Homogénéité des compétences<br>
+                        ✓ Code moderne et maintenable<br>
+                        ✓ Valorisation C++20/23<br>
+                        ✓ Équipe motivée et compétente</p>
+                    </div>
+                </div>
+            </div>
+            <div class="list-container" style="margin-top: 2rem;">
+                <div class="list-item">
+                    <h3>Approches concrètes</h3>
+                    <p>
+                        • Sessions techniques régulières (modules, concepts, coroutines)<br>
+                        • Code reviews formatives<br>
+                        • Pair programming intergénérationnel<br>
+                        • Migration progressive de modules legacy
+                    </p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Slide 8: Call to action -->
+    <div class="slide" data-slide="8">
+        <h1 style="font-size: clamp(2rem, 5vw, 4rem);">C'est maintenant<br>qu'il faut Agir</h1>
+        <div class="content" style="text-align: center;">
+            <div class="code-example" style="max-width: 800px; margin: 3rem auto;">
+                <span class="keyword">if</span> (now == perfect_time) {<br>
+                &nbsp;&nbsp;<span class="type">team</span>.invest_in_training();<br>
+                &nbsp;&nbsp;<span class="type">codebase</span>.modernize();<br>
+                &nbsp;&nbsp;<span class="type">future</span>.secure();<br>
+                }
+            </div>
+            <p style="font-size: 1.5rem; color: var(--text-primary); margin-top: 3rem;">
+                Investir dans la formation aujourd'hui,<br>
+                c'est garantir la <span class="highlight">qualité</span> et l'<span class="highlight">attractivité</span> de demain
+            </p>
+        </div>
+    </div>
+
+    <!-- Slide counter -->
+    <div class="slide-counter">
+        <span id="current-slide">1</span>/<span id="total-slides">9</span>
+    </div>
+
+    <script>
+        let currentSlide = 0;
+        const slides = document.querySelectorAll('.slide');
+        const totalSlides = slides.length;
+        const currentSlideDisplay = document.getElementById('current-slide');
+
+        function goToSlide(index) {
+            if (index < 0 || index >= totalSlides) return;
+            
+            // Remove active class from current slide
+            slides[currentSlide].classList.remove('active');
+            
+            // Set new slide
+            currentSlide = index;
+            
+            // Add active class to new slide
+            slides[currentSlide].classList.add('active');
+            
+            // Update slide counter
+            currentSlideDisplay.textContent = currentSlide + 1;
+        }
+
+        function nextSlide() {
+            if (currentSlide < totalSlides - 1) {
+                goToSlide(currentSlide + 1);
+            }
+        }
+
+        function previousSlide() {
+            if (currentSlide > 0) {
+                goToSlide(currentSlide - 1);
+            }
+        }
+
+        // Click navigation
+        document.addEventListener('click', (e) => {
+            // Don't navigate if clicking on progress dots
+            if (e.target.classList.contains('progress-dot')) return;
+            
+            if (e.button === 0) { // Left click
+                nextSlide();
+            }
+        });
+
+        // Right click navigation
+        document.addEventListener('contextmenu', (e) => {
+            e.preventDefault();
+            previousSlide();
+        });
+
+        // Keyboard navigation
+        document.addEventListener('keydown', (e) => {
+            if (e.key === 'ArrowRight' || e.key === ' ') {
+                nextSlide();
+            } else if (e.key === 'ArrowLeft') {
+                previousSlide();
+            }
+        });
+    </script>
+</body>
+</html>

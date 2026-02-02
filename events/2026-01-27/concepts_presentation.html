@@ -1,0 +1,773 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>C++20 Concepts : La révolution template</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Sometype+Mono:wght@400;700&family=Archivo:wght@300;400;600;800&display=swap" rel="stylesheet">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        :root {
+            --bg-primary: #1a1a1a;
+            --bg-secondary: #2a2a2a;
+            --accent-blue: #4a9eff;
+            --accent-orange: #ff8c42;
+            --accent-green: #4ade80;
+            --accent-red: #f87171;
+            --text-primary: #e8e8e8;
+            --text-secondary: #b0b0b0;
+        }
+
+        body {
+            font-family: 'Archivo', sans-serif;
+            background: var(--bg-primary);
+            color: var(--text-primary);
+            overflow: hidden;
+        }
+
+        .slide {
+            position: absolute;
+            width: 100vw;
+            height: 100vh;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            padding: 4rem;
+            opacity: 0;
+            transition: opacity 0.4s ease;
+            pointer-events: none;
+        }
+
+        .slide.active {
+            opacity: 1;
+            pointer-events: auto;
+        }
+
+        .logo-container {
+            position: fixed;
+            top: 2rem;
+            right: 2rem;
+            z-index: 1000;
+        }
+
+        .logo-it {
+            width: 80px;
+            height: auto;
+        }
+
+        .logo-main {
+            width: 120px;
+            height: auto;
+        }
+
+        h1 {
+            font-family: 'Sometype Mono', monospace;
+            font-size: clamp(2.5rem, 5vw, 4.5rem);
+            font-weight: 700;
+            line-height: 1.2;
+            text-align: center;
+            margin-bottom: 1.5rem;
+            color: var(--accent-blue);
+        }
+
+        h2 {
+            font-family: 'Sometype Mono', monospace;
+            font-size: clamp(1.8rem, 3.5vw, 3rem);
+            font-weight: 600;
+            margin-bottom: 2.5rem;
+            color: var(--accent-blue);
+            text-align: center;
+        }
+
+        h3 {
+            font-size: clamp(1.2rem, 2vw, 1.6rem);
+            font-weight: 600;
+            margin-bottom: 1rem;
+            color: var(--accent-orange);
+        }
+
+        p, li {
+            font-size: clamp(1rem, 1.4vw, 1.2rem);
+            line-height: 1.7;
+            color: var(--text-secondary);
+        }
+
+        .subtitle {
+            font-size: clamp(1.1rem, 1.8vw, 1.5rem);
+            color: var(--text-secondary);
+            text-align: center;
+            margin-bottom: 2rem;
+            font-weight: 300;
+        }
+
+        .content {
+            max-width: 1100px;
+            width: 100%;
+        }
+
+        .code-example {
+            background: var(--bg-secondary);
+            border-left: 3px solid var(--accent-blue);
+            padding: 1.2rem;
+            margin: 1.5rem 0;
+            border-radius: 4px;
+            font-family: 'Sometype Mono', monospace;
+            font-size: 0.95rem;
+            color: #a8b5d1;
+        }
+
+        .error-example {
+            background: #2a1a1a;
+            border-left: 3px solid var(--accent-red);
+            padding: 1.2rem;
+            margin: 1.5rem 0;
+            border-radius: 4px;
+            font-family: 'Sometype Mono', monospace;
+            font-size: 0.85rem;
+            color: #ff9999;
+        }
+
+        .success-example {
+            background: #1a2a1a;
+            border-left: 3px solid var(--accent-green);
+            padding: 1.2rem;
+            margin: 1.5rem 0;
+            border-radius: 4px;
+            font-family: 'Sometype Mono', monospace;
+            font-size: 0.95rem;
+            color: #99ff99;
+        }
+
+        .code-example .keyword {
+            color: var(--accent-orange);
+        }
+
+        .code-example .type {
+            color: var(--accent-blue);
+        }
+
+        .code-example .concept {
+            color: var(--accent-green);
+        }
+
+        .code-example .comment {
+            color: #666;
+        }
+
+        ul {
+            list-style: none;
+            margin: 1.5rem 0;
+        }
+
+        ul li {
+            padding: 0.8rem 0;
+            padding-left: 1.5rem;
+            position: relative;
+        }
+
+        ul li::before {
+            content: "•";
+            color: var(--accent-blue);
+            font-size: 1.5rem;
+            position: absolute;
+            left: 0;
+            top: 0.5rem;
+        }
+
+        .list-item {
+            background: var(--bg-secondary);
+            padding: 1.2rem;
+            margin-bottom: 1rem;
+            border-radius: 4px;
+            border-left: 3px solid var(--accent-blue);
+        }
+
+        .comparison {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 2rem;
+            margin: 2rem 0;
+        }
+
+        .slide-counter {
+            position: fixed;
+            bottom: 2rem;
+            right: 2rem;
+            font-family: 'Sometype Mono', monospace;
+            font-size: 0.9rem;
+            color: #666;
+            z-index: 1000;
+        }
+
+        .nav-hint {
+            position: fixed;
+            bottom: 2rem;
+            left: 50%;
+            transform: translateX(-50%);
+            font-family: 'Sometype Mono', monospace;
+            font-size: 0.75rem;
+            color: #666;
+            display: none;
+        }
+
+        .slide[data-slide="0"] .nav-hint {
+            display: block;
+        }
+
+        .highlight {
+            color: var(--accent-orange);
+            font-weight: 600;
+        }
+
+        .highlight-green {
+            color: var(--accent-green);
+            font-weight: 600;
+        }
+
+        .highlight-red {
+            color: var(--accent-red);
+            font-weight: 600;
+        }
+
+        .big-text {
+            font-size: clamp(1.8rem, 3vw, 2.5rem);
+            text-align: center;
+            color: var(--text-primary);
+            margin: 2rem 0;
+        }
+
+        .concept-box {
+            background: linear-gradient(45deg, #2a2a2a, #1a3a2a);
+            border: 2px solid var(--accent-green);
+            padding: 1.5rem;
+            border-radius: 8px;
+            margin: 1rem 0;
+        }
+
+        .grid-concepts {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 1rem;
+            margin: 2rem 0;
+        }
+
+        .concept-card {
+            background: var(--bg-secondary);
+            padding: 1rem;
+            border-radius: 6px;
+            border-left: 3px solid var(--accent-green);
+            font-size: 0.9rem;
+        }
+
+        .implementation-box {
+            background: linear-gradient(45deg, #2a3a2a, #1a2a1a);
+            border: 2px solid var(--accent-blue);
+            padding: 1.5rem;
+            border-radius: 8px;
+            margin: 1rem 0;
+        }
+
+        .two-column {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 2rem;
+            margin: 2rem 0;
+        }
+
+        .sfinae-box {
+            background: var(--bg-secondary);
+            border: 2px solid var(--accent-orange);
+            padding: 1.5rem;
+            border-radius: 8px;
+            margin: 1rem 0;
+        }
+
+        .error-image {
+            max-width: 100%;
+            max-height: 400px;
+            width: auto;
+            height: auto;
+            object-fit: contain;
+            border-radius: 4px;
+            margin: 1rem 0;
+        }
+
+        @media (max-width: 768px) {
+            .comparison {
+                grid-template-columns: 1fr;
+            }
+            
+            .slide {
+                padding: 2rem;
+            }
+            
+            .grid-concepts {
+                grid-template-columns: 1fr;
+            }
+
+            .two-column {
+                grid-template-columns: 1fr;
+            }
+
+            .logo-container {
+                top: 1rem;
+                right: 1rem;
+            }
+
+            .logo-it {
+                width: 60px;
+            }
+
+            .logo-main {
+                width: 90px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <!-- Logo container - shows appropriate logo based on slide -->
+    <div class="logo-container">
+        <img src="exaltIt_logo.png" alt="Exalt Logo" class="logo-main" id="main-logo">
+        <img src="exaltIt_logo.png" alt="Exalt IT Logo" class="logo-it" id="it-logo" style="display: none;">
+    </div>
+
+    <!-- Slide 1: Title -->
+    <div class="slide active" data-slide="0">
+        <h1>C++20 Concepts<br><span class="highlight">La révolution template</span></h1>
+        <p class="subtitle">Des erreurs cryptiques aux contraintes explicites</p>
+        <div class="code-example" style="max-width: 600px;">
+            <span class="keyword">template</span>&lt;<span class="concept">std::integral</span> T&gt;<br>
+            <span class="keyword">void</span> process(T value) { <span style="color: #666;">/* clear & safe */</span> }
+        </div>
+        <div class="nav-hint">Clic gauche : suivant | Clic droit : précédent</div>
+    </div>
+
+    <!-- Slide 2: Le problème - Erreurs cryptiques -->
+    <div class="slide" data-slide="1">
+        <div class="content">
+            <h2>Le problème : Avant C++20</h2>
+            <div class="big-text">
+                Supposons que l'on souhaite trier des élements dans un conteneur
+            </div>
+            <div class="code-example" style="text-align: center;">
+                <span class="type">std::list</span>&lt;<span class="keyword">int</span>&gt; myList = {3, 1, 2};<br>
+                <span class="type">std::sort</span>(myList.begin(), myList.end());
+            </div>
+            <div class="error-example">
+                <strong>Et vous obtenez ça :</strong><br><br>
+                <img src="logError.png" alt="Erreur de compilation cryptique" class="error-image">
+            </div>
+        </div>
+    </div>
+
+    <!-- Slide 3: Documentation confuse -->
+    <div class="slide" data-slide="2">
+        <div class="content">
+            <h2>Le vrai problème : Aucune vérification formelle</h2>
+            <div class="big-text" style="font-size: 1.3rem; margin-bottom: 2rem;">
+                Ce que la documentation dit sur <span class="highlight">std::sort</span>
+            </div>
+            <div class="code-example" style="font-size: 0.9rem; text-align: left; max-width: 900px;">
+                <span style="color: #4a9eff; font-weight: bold;">std::sort</span> | Algorithm library<br><br>
+                <span class="keyword">template</span> &lt; <span class="keyword">class</span> <span class="type">RandomIt</span> &gt;<br>
+                <span class="keyword">void</span> sort ( <span class="type">RandomIt</span> first, <span class="type">RandomIt</span> last ) ;<br><br>
+                <span class="keyword">template</span> &lt; <span class="keyword">class</span> <span class="type">RandomIt</span>, <span class="keyword">class</span> <span class="type">Compare</span> &gt;<br>
+                <span class="keyword">void</span> sort ( <span class="type">RandomIt</span> first, <span class="type">RandomIt</span> last, <span class="type">Compare</span> comp ) ;<br><br>
+                <span style="color: #999;">Les vraies contraintes :</span><br>
+                <span style="color: #ff9999;">• RandomIt must be a random-access iterator</span><br>
+                <span style="color: #ff9999;">• The dereferenced type must be MoveAssignable</span><br>
+            </div>
+            <div class="big-text highlight-red" style="margin-top: 2rem;">
+                Les contraintes sont implicites et invérifiables
+            </div>
+        </div>
+    </div>
+
+    <!-- Slide 4: La solution - C++20 Concepts -->
+    <div class="slide" data-slide="3">
+        <div class="content">
+            <h2>C++20 Concepts : La solution formelle</h2>
+            <div class="concept-box">
+                <div class="big-text">
+                    <span class="highlight-green">Les concepts formalisent</span><br>
+                    les contraintes sur les templates
+                </div>
+            </div>
+            <div class="comparison">
+                <div>
+                    <h3 style="color: var(--accent-red);">Avant (C++17)</h3>
+                    <div class="code-example">
+                        <span class="keyword">template</span>&lt;<span class="keyword">typename</span> T&gt;<br>
+                        <span class="keyword">void</span> sort(T first, T last) {<br>
+                        &nbsp;&nbsp;<span style="color: #666;">// T doit être random-access</span><br>
+                        &nbsp;&nbsp;<span style="color: #666;">// Espérons-le !</span><br>
+                        }
+                    </div>
+                </div>
+                <div>
+                    <h3 style="color: var(--accent-green);">Maintenant (C++20)</h3>
+                    <div class="code-example">
+                        <span class="keyword">void</span> sort(<span class="type">std::random_access_iterator</span> <span class="keyword">auto</span> first,<br>
+                        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="type">std::random_access_iterator</span> <span class="keyword">auto</span> last) {<br>
+                        &nbsp;&nbsp;<span style="color: #666;">// Vérifié formellement</span><br>
+                        }
+                    </div>
+                </div>
+            </div>
+            <div class="big-text highlight-green">
+                Contraintes explicites, vérifiées à la compilation
+            </div>
+        </div>
+    </div>
+
+    <!-- Slide 5: Erreurs claires -->
+    <div class="slide" data-slide="4">
+        <div class="content">
+            <h2>Résultat : Des erreurs compréhensibles</h2>
+            <div class="comparison">
+                <div>
+                    <h3 style="color: var(--accent-red);">C++17 : Gibberish</h3>
+                    <div class="error-example" style="font-size: 0.75rem;">
+                        error: no matching function for call<br>
+                        to 'std::sort'<br>
+                        /usr/include/c++/11/bits/stl_algo.h:4842:5<br>
+                        candidate template ignored<br>
+                        <span style="color: #666;">... 50 lignes ...</span>
+                    </div>
+                </div>
+                <div>
+                    <h3 style="color: var(--accent-green);">C++20 : Clair</h3>
+                    <div class="success-example">
+                        error: 'std::list&lt;int&gt;::iterator'<br>
+                        does not satisfy concept<br>
+                        'random_access_iterator'<br><br>
+                        'operator[]' not available<br>
+                        distance is not O(1)
+                    </div>
+                </div>
+            </div>
+            <div class="big-text">
+                Log d'erreur plus accessible<br>
+            </div>
+        </div>
+    </div>
+
+    <!-- Slide 6: Standard Library Concepts -->
+    <div class="slide" data-slide="5">
+        <div class="content">
+            <h2>Bibliothèque standard : Concepts prêts à l'emploi</h2>
+            <div class="grid-concepts">
+                <div class="concept-card">
+                    <h3 style="color: var(--accent-green); font-size: 1rem;">Itérateurs</h3>
+                    <p><code>std::input_iterator</code><br>
+                    <code>std::forward_iterator</code><br>
+                    <code>std::bidirectional_iterator</code><br>
+                    <code>std::random_access_iterator</code></p>
+                </div>
+                <div class="concept-card">
+                    <h3 style="color: var(--accent-green); font-size: 1rem;">Arithmétique</h3>
+                    <p><code>std::integral</code><br>
+                    <code>std::floating_point</code><br>
+                    <code>std::signed_integral</code><br>
+                    <code>std::unsigned_integral</code></p>
+                </div>
+                <div class="concept-card">
+                    <h3 style="color: var(--accent-green); font-size: 1rem;">Comparaisons</h3>
+                    <p><code>std::equality_comparable</code><br>
+                    <code>std::totally_ordered</code><br>
+                    <code>std::three_way_comparable</code></p>
+                </div>
+                <div class="concept-card">
+                    <h3 style="color: var(--accent-green); font-size: 1rem;">Ranges</h3>
+                    <p><code>std::ranges::range</code><br>
+                    <code>std::ranges::random_access_range</code><br>
+                    <code>std::ranges::sorted_range</code></p>
+                </div>
+            </div>
+            <div class="code-example">
+                <span style="color: #666;">// Usage immédiat</span><br>
+                <span class="keyword">void</span> processNumber(<span class="type">std::integral</span> <span class="keyword">auto</span> n) { }<br>
+                <span class="keyword">void</span> sortContainer(<span class="type">std::random_access_iterator</span> <span class="keyword">auto</span> it) { }
+            </div>
+            <div class="big-text highlight-green">
+                30+ concepts standards à votre disposition
+            </div>
+        </div>
+    </div>
+
+    <!-- Slide 7: Concepts personnalisés -->
+    <div class="slide" data-slide="6">
+        <div class="content">
+            <h2>Vos concepts métier</h2>
+            <div class="big-text">
+                Créez des contraintes spécifiques à votre domaine
+            </div>
+            <div class="code-example">
+                <span style="color: #666;">// Concept personnalisé : Sérialisation JSON</span><br>
+                <span class="keyword">template</span>&lt;<span class="keyword">typename</span> T&gt;<br>
+                <span class="concept">concept</span> <span class="type">JsonSerializable</span> = <span class="keyword">requires</span>(T obj) {<br>
+                &nbsp;&nbsp;{ obj.toJson() } -&gt; <span class="type">std::convertible_to</span>&lt;<span class="type">std::string</span>&gt;;<br>
+                };<br><br>
+                <span class="keyword">void</span> saveToFile(<span class="type">JsonSerializable</span> <span class="keyword">auto</span> obj, <span class="keyword">const</span> <span class="type">std::string</span>&amp; filename) {<br>
+                &nbsp;&nbsp;file &lt;&lt; obj.toJson();<br>
+                }
+            </div>
+            <div class="comparison">
+                <div class="success-example">
+                    <strong>Acceptés :</strong><br><br>
+                    saveToFile(user, "user.json");<br>
+                    saveToFile(config, "cfg.json");
+                </div>
+                <div class="error-example">
+                    <strong>Rejetés :</strong><br><br>
+                    saveToFile(myInt, "num.json");<br>
+                    error: int does not<br>
+                    satisfy JsonSerializable
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Slide 8: Auto + Templates (new slide) -->
+    <div class="slide" data-slide="7">
+        <div class="content">
+            <h2>L'unification : auto et templates ensemble</h2>
+            <div class="implementation-box">
+                <div class="big-text">
+                    <span class="highlight-green">C++20 unifie</span> les templates et <span class="highlight-green">auto</span>
+                </div>
+            </div>
+            <div class="two-column">
+                <div>
+                    <h3 style="color: var(--accent-orange);">Syntaxe traditionnelle</h3>
+                    <div class="code-example">
+                        <span class="keyword">template</span>&lt;<span class="keyword">typename</span> T&gt;<br>
+                        <span class="keyword">requires</span> <span class="type">std::totally_ordered</span>&lt;T&gt;<br>
+                        T findMax(T a, T b) {<br>
+                        &nbsp;&nbsp;<span class="keyword">return</span> (a &gt; b) ? a : b;<br>
+                        }
+                    </div>
+                </div>
+                <div>
+                    <h3 style="color: var(--accent-green);">Nouvelle syntaxe (C++20)</h3>
+                    <div class="code-example">
+                        auto findMax(<span class="type">std::totally_ordered</span> <span class="keyword">auto</span> a,<br>
+                        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="type">std::totally_ordered</span> <span class="keyword">auto</span> b) {<br>
+                        &nbsp;&nbsp;<span class="keyword">return</span> (a &gt; b) ? a : b;<br>
+                        }
+                    </div>
+                </div>
+            </div>
+            <div class="big-text highlight-green">
+                Plus concis, plus clair, plus sûr
+            </div>
+        </div>
+    </div>
+
+    <!-- Slide 9: Implémentation des concepts -->
+    <div class="slide" data-slide="8">
+        <div class="content">
+            <h2>Sous le capot : Comment ça marche</h2>
+            <div class="implementation-box">
+                <h3 style="color: var(--accent-green); margin-top: 0;">Structure d'un concept</h3>
+            </div>
+            <div class="code-example">
+                <span class="keyword">template</span>&lt;<span class="keyword">typename</span> T&gt;<br>
+                <span class="concept">concept</span> <span class="type">Comparable</span> = <span class="keyword">requires</span>(T a, T b) {<br>
+                &nbsp;&nbsp;{ a &lt; b } -&gt; <span class="type">std::convertible_to</span>&lt;<span class="keyword">bool</span>&gt;;<br>
+                &nbsp;&nbsp;{ a == b } -&gt; <span class="type">std::convertible_to</span>&lt;<span class="keyword">bool</span>&gt;;<br>
+                &nbsp;&nbsp;{ a != b } -&gt; <span class="type">std::convertible_to</span>&lt;<span class="keyword">bool</span>&gt;;<br>
+                };<br><br>
+                <span style="color: #666;">// Type satisfait le concept SI ET SEULEMENT SI</span><br>
+                <span style="color: #666;">// toutes les expressions compilent ET retournent bons types</span>
+            </div>
+            <div class="two-column">
+                <div>
+                    <h3 style="color: var(--accent-green);">Concept satisfait</h3>
+                    <div class="success-example">
+                        <span class="keyword">int</span> a = 5, b = 10;<br>
+                        a &lt; b;  <span style="color: #9f9;">// bool</span><br>
+                        a == b; <span style="color: #9f9;">// bool</span><br>
+                        a != b; <span style="color: #9f9;">// bool</span><br><br>
+                        <span class="type">Comparable</span>&lt;<span class="keyword">int</span>&gt; ✓
+                    </div>
+                </div>
+                <div>
+                    <h3 style="color: var(--accent-red);">Concept non satisfait</h3>
+                    <div class="error-example">
+                        <span class="keyword">struct</span> <span class="type">Custom</span> {};<br>
+                        <span class="type">Custom</span> a, b;<br>
+                        a &lt; b;  <span style="color: #f99;">// Non défini</span><br>
+                        a == b; <span style="color: #f99;">// Non défini</span><br><br>
+                        <span class="type">Comparable</span>&lt;<span class="type">Custom</span>&gt; ✗
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Slide 10: SFINAE et Concepts -->
+    <div class="slide" data-slide="9">
+        <div class="content">
+            <h2>SFINAE + enable_if: L'ancien mécanisme</h2>
+            <div class="sfinae-box">
+                <h3 style="color: var(--accent-orange); margin-top: 0;">SFINAE : Substitution Failure Is Not An Error</h3>
+                <p style="margin-top: 1rem;">Avant C++20, pour vérifier si un type a une méthode, on utilisait SFINAE avec <code>enable_if</code>. C'est complexe et fragile.</p>
+            </div>
+            <div class="two-column">
+                <div>
+                    <h3 style="color: var(--accent-red);">Approche SFINAE (C++17)</h3>
+                    <div class="code-example">
+                        <span class="keyword">template</span>&lt;<span class="keyword">typename</span> T&gt;<br>
+                        <span class="keyword">typename</span> <span class="type">std::enable_if_t</span>&lt;<br>
+                        &nbsp;&nbsp;<span class="type">std::is_invocable_v</span>&lt;T&gt;<br>
+                        &gt;<br>
+                        execute(T f) {<br>
+                        &nbsp;&nbsp;f();<br>
+                        }<br><br>
+                        <span style="color: #666;">// Lourd, peu lisible</span>
+                    </div>
+                </div>
+                <div>
+                    <h3 style="color: var(--accent-green);">Approche Concepts (C++20)</h3>
+                    <div class="code-example">
+                        <span class="keyword">void</span> execute(<span class="type">std::invocable</span> <span class="keyword">auto</span> f) {<br>
+                        &nbsp;&nbsp;f();<br>
+                        }<br><br>
+                        <span style="color: #9f9;">// Clair, idiomatique</span><br>
+                        <span style="color: #9f9;">// Concepts remplacent</span><br>
+                        <span style="color: #9f9;">// SFINAE</span>
+                    </div>
+                </div>
+            </div>
+            <div class="implementation-box">
+                <h3 style="color: var(--accent-green); margin-top: 0;">Concepts + Overloading</h3>
+            </div>
+            <div class="code-example">
+                <span class="comment">// Distinction claire grâce aux concepts</span><br>
+                <span class="keyword">void</span> process(<span class="type">std::integral</span> <span class="keyword">auto</span> x) { }<br>
+                <span class="keyword">void</span> process(<span class="type">std::floating_point</span> <span class="keyword">auto</span> x) { }<br><br>
+                process(42);    <span style="color: #666;">// Version integral</span><br>
+                process(3.14);  <span style="color: #666;">// Version floating_point</span>
+            </div>
+        </div>
+    </div>
+
+    <!-- Slide 11: Remerciements -->
+    <div class="slide" data-slide="10">
+        <div class="content" style="text-align: center;">
+            <h1 style="margin-bottom: 3rem;">Merci !</h1>
+            <div class="big-text" style="font-size: 2.2rem; margin: 3rem 0;">
+                <span class="highlight-green">Questions ?</span>
+            </div>
+            <div style="margin-top: 3rem; display: flex; flex-direction: column; align-items: center; gap: 2rem;">
+                <img src="qrcode-linkedin_mouad.png" alt="QR Code LinkedIn" style="width: 200px; height: 200px;">
+                <div style="font-size: 1.3rem; color: var(--text-primary); font-weight: 600;">BEN-GELOUNE Mouad</div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Slide 12: Call to action (commented out - to be re-added later) -->
+    <!--
+    <div class="slide" data-slide="11">
+        <h1 style="font-size: clamp(2rem, 5vw, 4rem);">Adoptez C++20 Concepts<br><span class="highlight">dès aujourd'hui</span></h1>
+        <div class="content" style="text-align: center;">
+            <div class="code-example" style="max-width: 800px; margin: 3rem auto;">
+                <span class="keyword">#include</span> <span style="color: #98c379;">&lt;concepts&gt;</span><br><br>
+                <span class="keyword">void</span> yourFunction(<span class="type">YourConcept</span> <span class="keyword">auto</span> param) {<br>
+                &nbsp;&nbsp;<span style="color: #666;">// Contraintes claires</span><br>
+                &nbsp;&nbsp;<span style="color: #666;">// Erreurs lisibles</span><br>
+                &nbsp;&nbsp;<span style="color: #666;">// Code maintenable</span><br>
+                }
+            </div>
+            <div class="comparison">
+                <div class="list-item">
+                    <strong>Bénéfices immédiats</strong><br><br>
+                    Erreurs 10x plus claires<br>
+                    Templates plus sûrs<br>
+                    Meilleure documentation
+                </div>
+                <div class="big-text" style="font-size: 1.5rem;">
+                    La fin des "template errors"<br>
+                    La fin du SFINAE complexe<br>
+                    Le début de templates vrais
+                </div>
+            </div>
+        </div>
+    </div>
+    -->
+
+    <!-- Slide counter -->
+    <div class="slide-counter">
+        <span id="current-slide">1</span>/<span id="total-slides">11</span>
+    </div>
+
+    <script>
+        let currentSlide = 0;
+        const slides = document.querySelectorAll('.slide');
+        const totalSlides = slides.length;
+        const currentSlideDisplay = document.getElementById('current-slide');
+        const mainLogo = document.getElementById('main-logo');
+        const itLogo = document.getElementById('it-logo');
+
+        function updateLogo() {
+            if (currentSlide === 0) {
+                mainLogo.style.display = 'block';
+                itLogo.style.display = 'none';
+            } else {
+                mainLogo.style.display = 'none';
+                itLogo.style.display = 'block';
+            }
+        }
+
+        function goToSlide(index) {
+            if (index < 0 || index >= totalSlides) return;
+            
+            slides[currentSlide].classList.remove('active');
+            currentSlide = index;
+            slides[currentSlide].classList.add('active');
+            currentSlideDisplay.textContent = currentSlide + 1;
+            updateLogo();
+        }
+
+        function nextSlide() {
+            if (currentSlide < totalSlides - 1) {
+                goToSlide(currentSlide + 1);
+            }
+        }
+
+        function previousSlide() {
+            if (currentSlide > 0) {
+                goToSlide(currentSlide - 1);
+            }
+        }
+
+        updateLogo();
+
+        document.addEventListener('click', (e) => {
+            nextSlide();
+        });
+
+        document.addEventListener('contextmenu', (e) => {
+            e.preventDefault();
+            previousSlide();
+        });
+
+        document.addEventListener('keydown', (e) => {
+            if (e.key === 'ArrowRight' || e.key === ' ') {
+                nextSlide();
+            } else if (e.key === 'ArrowLeft') {
+                previousSlide();
+            }
+        });
+    </script>
+</body>
+</html>
